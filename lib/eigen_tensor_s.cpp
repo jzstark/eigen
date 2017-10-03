@@ -3,6 +3,7 @@
  * Copyright (c) 2016-2017 Liang Wang <liang.wang@cl.cam.ac.uk>
  */
 
+#include<utility>
 
 /******************** pointer conversion  ********************/
 
@@ -132,7 +133,46 @@ void c_eigen_tensor_s_spatial_max_pooling(
   Eigen::TensorMap<tensor_4_s>output(output_ptr, batches, output_cols, output_rows, in_channel);
 
   PaddingType pad_typ = (padding == C_PADDING_SAME) ? PADDING_SAME : PADDING_VALID;
-  output = SpatialMaxPooling(input, kernel_rows, kernel_cols, row_stride, col_stride, pad_typ, row_in_stride, col_in_stride);
+  //output = SpatialMaxPooling(input, kernel_rows, kernel_cols, row_stride, col_stride, pad_typ, row_in_stride, col_in_stride);
+
+  /*
+  Eigen::Tensor<tensor_s_elt, 4, Eigen::RowMajor> padded;
+  Eigen::array<std::pair<int, int>, 4> paddings;
+  paddings[0] = std::make_pair(0, 0);
+  paddings[1] = std::make_pair(1, 1);
+  paddings[2] = std::make_pair(1, 1);
+  paddings[3] = std::make_pair(0, 0);
+  padded = input.pad(paddings); */
+
+  // Padding not considered
+
+  for (int i = 0; i < batches; ++i) {
+    for (int j = 0; j < output_cols; ++j) {
+      for (int k = 0; k < output_rows; ++k) {
+        for (int l = 0; l < in_channel; ++l) {
+
+          const int len = kernel_cols * kernel_rows;
+          const int cstart = j * col_stride;
+          const int rstart = k * row_stride;
+          const int cend   = cstart + kernel_cols;
+          const int rend   = rstart + kernel_rows;
+
+          float v[len] = {0.};
+          int c = 0;
+          for (int a = cstart; a < cend; ++a) {
+            for (int b = rstart; b < rend; ++b) {
+              // assert a < input_cols && b < input_rows
+              v[c] = input(i, a, b, l);
+              c++;
+            }
+          }
+          
+          float foo = *std::max_element(v, v+len);
+          output(i,j,k,l) = foo;
+        }
+      }
+    }
+  }
 
   return;
 }
@@ -148,7 +188,32 @@ void c_eigen_tensor_s_spatial_avg_pooling(
   Eigen::TensorMap<tensor_4_s>output(output_ptr, batches, output_cols, output_rows, in_channel);
 
   PaddingType pad_typ = (padding == C_PADDING_SAME) ? PADDING_SAME : PADDING_VALID;
-  output = SpatialAvgPooling(input, kernel_rows, kernel_cols, row_stride, col_stride, pad_typ, row_in_stride, col_in_stride);
+  //output = SpatialAvgPooling(input, kernel_rows, kernel_cols, row_stride, col_stride, pad_typ, row_in_stride, col_in_stride);
+  for (int i = 0; i < batches; ++i) {
+    for (int j = 0; j < output_cols; ++j) {
+      for (int k = 0; k < output_rows; ++k) {
+        for (int l = 0; l < in_channel; ++l) {
+
+          const int len = kernel_cols * kernel_rows;
+          const int cstart = j * col_stride;
+          const int rstart = k * row_stride;
+          const int cend   = cstart + kernel_cols;
+          const int rend   = rstart + kernel_rows;
+
+          float sum = 0.;
+          int c = 0;
+          for (int a = cstart; a < cend; ++a) {
+            for (int b = rstart; b < rend; ++b) {
+              sum += input(i, a, b, l);
+              c++;
+            }
+          }
+
+          output(i,j,k,l) = sum / len;
+        }
+      }
+    }
+  }
 
   return;
 }

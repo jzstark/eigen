@@ -133,6 +133,12 @@ void c_eigen_tensor_s_spatial_max_pooling(
   Eigen::TensorMap<tensor_4_s>output(output_ptr, batches, output_cols, output_rows, in_channel);
 
   PaddingType pad_typ = (padding == C_PADDING_SAME) ? PADDING_SAME : PADDING_VALID;
+
+  /*
+  std::cout << "Input_str: " << std::dec << input_ptr << std::endl;
+  std::cout << "output_str: " << std::dec << output_ptr << std::endl;
+  */
+
   //output = SpatialMaxPooling(input, kernel_rows, kernel_cols, row_stride, col_stride, pad_typ, row_in_stride, col_in_stride);
 
   /*
@@ -143,15 +149,33 @@ void c_eigen_tensor_s_spatial_max_pooling(
   paddings[2] = std::make_pair(1, 1);
   paddings[3] = std::make_pair(0, 0);
   padded = input.pad(paddings); */
+  /*
+  int pad = 0; // SAME
+  if (pad_typ == PADDING_SAME) {
+    pad = 1
+    while( (input_cols - kernel_cols + 2 * pad) % col_stride != 0) { // find suitable padding value
+      pad++;
+    }
+  }
+  // there is no need - since we've already known the output shape:
+  */
 
-  // Padding not considered
+  assert((col_stride == row_stride) &&
+    (kernel_cols == kernel_rows))
+
+  int pad = 0; // VALID
+  if (pad_typ == PADDING_SAME) {
+    pad = (col_stride * ( output_cols - 1) +
+      kernel_cols - input_cols) / 2
+  }
+
+  const int len = kernel_cols * kernel_rows;
 
   for (int i = 0; i < batches; ++i) {
     for (int j = 0; j < output_cols; ++j) {
       for (int k = 0; k < output_rows; ++k) {
         for (int l = 0; l < in_channel; ++l) {
 
-          const int len = kernel_cols * kernel_rows;
           const int cstart = j * col_stride;
           const int rstart = k * row_stride;
           const int cend   = cstart + kernel_cols;
@@ -166,7 +190,7 @@ void c_eigen_tensor_s_spatial_max_pooling(
               c++;
             }
           }
-          
+
           float foo = *std::max_element(v, v+len);
           output(i,j,k,l) = foo;
         }

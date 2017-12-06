@@ -9,7 +9,7 @@ all:
 	g++ ${CXXFLAGS2} ${OPTFLAGS0} eigen_dsmat.cpp -o eigen_dsmat.o
 	g++ ${CXXFLAGS2} ${OPTFLAGS0} eigen_spmat.cpp -o eigen_spmat.o
 
-	ar rvs libeigen.a eigen_dsmat.o eigen_spmat.o eigen_tensor.o
+	gcc-ar rvs libeigen.a eigen_dsmat.o eigen_spmat.o eigen_tensor.o
 dynamic:
 	g++ ${CXXFLAGS1} -I. eigen_dsmat.cpp eigen_spmat.cpp -o libeigen.so
 clean:

@@ -161,12 +161,12 @@ void c_eigen_tensor_s_spatial_max_pooling(
   */
 
   assert((col_stride == row_stride) &&
-    (kernel_cols == kernel_rows))
+    (kernel_cols == kernel_rows));
 
   int pad = 0; // VALID
   if (pad_typ == PADDING_SAME) {
     pad = (col_stride * ( output_cols - 1) +
-      kernel_cols - input_cols) / 2
+      kernel_cols - input_cols) / 2;
   }
 
   const int len = kernel_cols * kernel_rows;
